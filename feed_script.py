@@ -19,6 +19,11 @@ rss_sources = {
     }
 }
 
+# Fetch API key
+api_key = os.getenv("OTX_API_KEY")
+if not api_key:
+    raise ValueError("API key not found. Please set the OTX_API_KEY environment variable.")
+
 # Fetch and filter RSS feed entries based on keywords
 def fetch_and_filter_rss(url, keywords):
     feed = feedparser.parse(url)
@@ -37,7 +42,6 @@ def format_published_date(published):
 
 # Fetch data from AlienVault and populate lists
 def fetch_alienvault_data():
-    api_key = os.getenv("OTX_API_KEY")
     headers = {"X-OTX-API-KEY": api_key}
     
     # Initialize lists for indicators
