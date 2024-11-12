@@ -1,0 +1,111 @@
+/* styles.css */
+
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #f5f5f5;
+    margin-right: 20px;
+    color: #333;
+}
+
+h1 {
+    text-align: center;
+    color: #333;
+    margin-top: 20px;
+}
+
+.dashboard-table {
+    width: 90%;
+    margin: 20px auto;
+    border-collapse: collapse;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.dashboard-table th, .dashboard-table td {
+    padding: 15px;
+    text-align: left;
+    vertical-align: top;
+    border: 1px solid #ddd;
+}
+
+.dashboard-table th {
+    padding: 10px;
+    background-color: #333;
+    color: #fff;
+    text-align: left;
+}
+
+.dashboard-table td {
+    vertical-align: top;
+    padding: 10px;
+    overflow-y: auto;
+    max-height: 150px; /* limit the height for scroll */
+}
+
+.dashboard-table td ul {
+    max-height: 150px; /* Set a maximum height for scrollable area */
+    overflow-y: scroll; /* Enable vertical scroll */
+    margin: 0;
+    padding: 0;
+    list-style-type: none;
+}
+
+ul {
+    padding-left: 20px;
+    list-style-type: none;
+}
+
+.dashboard-table .copy-button {
+    margin-top: 5px;
+}
+
+li {
+    margin-bottom: 8px;
+}
+
+a {
+    text-decoration: none;
+    color: #0066cc;
+}
+
+a:hover {
+    text-decoration: underline;
+}
+
+/* Define styles for sections in the second part */
+#ssh_Ioc, #docker_Ioc, #smb_Ioc, #phis_Ioc {
+    max-width: 25%;
+    height: 150px; /* Adjust height as needed */
+    overflow-y: auto; /* Adds scrollbar */
+    word-wrap: break-word; /* Fallback for older browsers */
+    overflow-wrap: break-word; /* Ensures long words wrap */
+    white-space: normal; /* Allows wrapping */
+    display: inline-block; /* Ensures column alignment */
+    box-sizing: border-box;
+    padding: 10px; /* Adds padding for readability */
+}
+
+/* Forcing all URLs to break within the box */
+#phis_Ioc li {
+    overflow-wrap: break-word; /* Forces URLs to wrap */
+    word-break: break-all; /* Allows breaking within words if necessary */
+}
+
+/* Copy button styling */
+.copy-btn {
+    display: inline-block;
+    margin-top: 5px;
+    background-color: #333;
+    color: #fff;
+    padding: 5px;
+    cursor: pointer;
+    text-align: center;
+    width: 50px;
+    border: none;
+    border-radius: 4px;
+}
+
+.copy-btn:hover {
+    background-color: #555;
+}

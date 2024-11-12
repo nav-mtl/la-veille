@@ -1,0 +1,41 @@
+name: Run Threat Intelligence Dashboard Script
+
+# Schedule the workflow to run periodically using cron syntax
+on:
+  schedule:
+    - cron: '0 0 * * *'  # This runs the workflow every day at midnight UTC
+
+  # Optionally, allow manual triggering of the workflow
+  workflow_dispatch:
+
+jobs:
+  run_script:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.x'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install requests feedparser os  # Install any dependencies needed
+
+      - name: Run the Threat Intelligence Dashboard Script
+        run: |
+          python feed_script.py  
+      
+      - name: Commit and push changes
+        run: |
+          git config --global user.name "GitHub Actions"
+          git config --global user.email "actions@github.com"
+          git add index.html
+          git commit -m "Update dashboard with latest data"
+          git push
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
