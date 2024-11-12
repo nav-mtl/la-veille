@@ -1,11 +1,11 @@
 name: Run Threat Intelligence Dashboard Script
 
-# Schedule the workflow to run periodically using cron syntax
+# Planifiez l'exécution périodique du workflow en utilisant la syntaxe cron
 on:
   schedule:
-    - cron: '0 0 * * *'  # This runs the workflow every day at midnight UTC
+    - cron: '0 0 * * *'  # Cela exécute le workflow tous les jours à minuit UTC
 
-  # Optionally, allow manual triggering of the workflow
+  # En option, autoriser le déclenchement manuel du workflow
   workflow_dispatch:
 
 jobs:

@@ -3,49 +3,84 @@ import feedparser
 import os
 from datetime import datetime
 
-# Define the RSS feeds and keywords for each source
+# Définir les mots-clés de recherche pour les différents flux RSS
 rss_sources = {
     "CyberScoop": {
         "url": "https://cyberscoop.com/news/financial/feed/",
-        "keywords": ["finance", "bank", "ransomware", "CrowdStrike", "Business", "Regulation", "Cybercrime"]
+        "keywords": [
+            "finance",
+            "bank",
+            "ransomware",
+            "CrowdStrike",
+            "Business",
+            "Regulation",
+            "Cybercrime",
+        ],
     },
     "ThreatPost": {
         "url": "https://threatpost.com/feed/",
-        "keywords": ["cybercriminal", "hacktivist", "vulnerabilities", "cyberterrorism", "Zero-Day", "Bug", "Malware", "Government"]
+        "keywords": [
+            "cybercriminal",
+            "hacktivist",
+            "vulnerabilities",
+            "cyberterrorism",
+            "Zero-Day",
+            "Bug",
+            "Malware",
+            "Government",
+        ],
     },
     "ExploitDB": {
         "url": "https://www.exploit-db.com/rss.xml",
-        "keywords": ["Authentication", "DNS", "SolarWinds", "SQL", "XSS", "Syslogs", "FreePBX", "0day"]
-    }
+        "keywords": [
+            "Authentication",
+            "DNS",
+            "SolarWinds",
+            "SQL",
+            "XSS",
+            "Syslogs",
+            "FreePBX",
+            "0day",
+        ],
+    },
 }
 
-# Fetch API key
+# Récupération de la clé API depuis le coffre-fort
 api_key = os.environ['OTX_API_KEY']
-print(api_key)
 if not api_key:
-    raise ValueError("API key not found. Please set the OTX_API_KEY environment variable.")
+    raise ValueError(
+        "Clé API introuvable. Veuillez définir la variable d'environnement OTX_API_KEY."
+    )
 
-# Fetch and filter RSS feed entries based on keywords
+# Récupérer et filtrer les entrées de flux RSS en fonction de mots-clés
 def fetch_and_filter_rss(url, keywords):
     feed = feedparser.parse(url)
     filtered_entries = [
-        entry for entry in feed.entries
-        if any(keyword.lower() in entry.title.lower() or keyword.lower() in entry.description.lower() for keyword in keywords)
+        entry
+        for entry in feed.entries
+        if any(
+            keyword.lower() in entry.title.lower()
+            or keyword.lower() in entry.description.lower()
+            for keyword in keywords
+        )
     ]
-    return filtered_entries[:10]  # Limit to top 10 entries
+    return filtered_entries[:10]  # Limité aux 10 meilleures entrées
 
-# Clean and format titles and dates for HTML
+
+# Nettoyer et formater les titres et les dates pour HTML
 def clean_exploitdb_title(title):
     return title.split("] ", 1)[1] if title.startswith("[") and "] " in title else title
+
 
 def format_published_date(published):
     return published.replace(" +0000", "").replace("00:00:00", "").strip()
 
-# Fetch data from AlienVault and populate lists
+
+# Récupérer des données depuis AlienVault
 def fetch_alienvault_data():
     headers = {"X-OTX-API-KEY": api_key}
-    
-    # Initialize lists for indicators
+
+    # Initialiser la variable des listes pour les indicateurs
     ssh_Ioc = []
     docker_Ioc = []
     smb_Ioc = []
@@ -53,21 +88,43 @@ def fetch_alienvault_data():
     md5_hashes = []
     sha1_hashes = []
     sha256_hashes = []
-    
-    # Define pulses and types
+
+    # Définir les impulsions et les types
     pulses = {
-        "SSH Brute-Force": {"id": "60ece5998a5b54a5ffe75cb4", "type": "IPv4", "variable": "ssh_Ioc"},
-        "Docker API Exploit Attempts": {"id": "66c74422b99d3b24bb2c574b", "type": "IPv4", "variable": "docker_Ioc"},
-        "SMB Brute-Force": {"id": "6731d9df3237af17724afe5e", "type": "IPv4", "variable": "smb_Ioc"},
-        "Phishing URLs": {"id": "60a794fa6de6293139323f21", "type": "URL", "variable": "phis_Ioc"}
+        "SSH Brute-Force": {
+            "id": "60ece5998a5b54a5ffe75cb4",
+            "type": "IPv4",
+            "variable": "ssh_Ioc",
+        },
+        "Docker API Exploit Attempts": {
+            "id": "66c74422b99d3b24bb2c574b",
+            "type": "IPv4",
+            "variable": "docker_Ioc",
+        },
+        "SMB Brute-Force": {
+            "id": "6731d9df3237af17724afe5e",
+            "type": "IPv4",
+            "variable": "smb_Ioc",
+        },
+        "Phishing URLs": {
+            "id": "60a794fa6de6293139323f21",
+            "type": "URL",
+            "variable": "phis_Ioc",
+        },
     }
-    
-    # Fetch data for each pulse
+
+    # Récupérer des données pour chaque point de terminaison
     for pulse_name, pulse_info in pulses.items():
         pulse_id = pulse_info["id"]
         indicator_type = pulse_info["type"]
-        response = requests.get(f"https://otx.alienvault.com/api/v1/pulses/{pulse_id}", headers=headers)
-        indicators = [indicator["indicator"] for indicator in response.json().get("indicators", []) if indicator.get("type") == indicator_type]
+        response = requests.get(
+            f"https://otx.alienvault.com/api/v1/pulses/{pulse_id}", headers=headers
+        )
+        indicators = [
+            indicator["indicator"]
+            for indicator in response.json().get("indicators", [])
+            if indicator.get("type") == indicator_type
+        ]
         if pulse_info["variable"] == "ssh_Ioc":
             ssh_Ioc.extend(indicators)
         elif pulse_info["variable"] == "docker_Ioc":
@@ -76,8 +133,8 @@ def fetch_alienvault_data():
             smb_Ioc.extend(indicators)
         elif pulse_info["variable"] == "phis_Ioc":
             phis_Ioc.extend(indicators)
-    
-    # Fetch hashes from subscribed data
+
+    # Récupérer les hachages des données souscrites
     subscribed_url = "https://otx.alienvault.com/api/v1/pulses/subscribed?limit=100"
     response = requests.get(subscribed_url, headers=headers)
     for result in response.json().get("results", []):
@@ -88,12 +145,30 @@ def fetch_alienvault_data():
                 sha1_hashes.append(indicator.get("indicator"))
             elif indicator.get("type") == "FileHash-SHA256":
                 sha256_hashes.append(indicator.get("indicator"))
-    
-    return ssh_Ioc, docker_Ioc, smb_Ioc, phis_Ioc, md5_hashes, sha1_hashes, sha256_hashes
 
-def generate_html(filtered_data, ssh_Ioc, docker_Ioc, smb_Ioc, phis_Ioc, md5_hashes, sha1_hashes, sha256_hashes):
-    current_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-    
+    return (
+        ssh_Ioc,
+        docker_Ioc,
+        smb_Ioc,
+        phis_Ioc,
+        md5_hashes,
+        sha1_hashes,
+        sha256_hashes,
+    )
+
+
+def generate_html(
+    filtered_data,
+    ssh_Ioc,
+    docker_Ioc,
+    smb_Ioc,
+    phis_Ioc,
+    md5_hashes,
+    sha1_hashes,
+    sha256_hashes,
+):
+    current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
     html_content = f"""
     <html>
     <head>
@@ -148,17 +223,28 @@ def generate_html(filtered_data, ssh_Ioc, docker_Ioc, smb_Ioc, phis_Ioc, md5_has
             </tr>
             <tr>
     """
-    
-    # RSS Feed Data
+
+    # Données du flux RSS
     for source in ["CyberScoop", "ThreatPost", "ExploitDB"]:
         html_content += "<td><ul>"
         for entry in filtered_data[source]:
-            title = clean_exploitdb_title(entry.title) if source == "ExploitDB" else entry.title
-            published_date = format_published_date(entry.published) if 'published' in entry else 'Date not available'
-            html_content += f"<li><a href='{entry.link}'>{title}</a> - {published_date}</li>"
+            title = (
+                clean_exploitdb_title(entry.title)
+                if source == "ExploitDB"
+                else entry.title
+            )
+            published_date = (
+                format_published_date(entry.published)
+                if "published" in entry
+                else "Date not available"
+            )
+            html_content += (
+                f"<li><a href='{entry.link}'>{title}</a> - {published_date}</li>"
+            )
         html_content += "</ul></td>"
-    
-    html_content += """
+
+    html_content += (
+        """
             </tr>
         </table>
 
@@ -173,21 +259,33 @@ def generate_html(filtered_data, ssh_Ioc, docker_Ioc, smb_Ioc, phis_Ioc, md5_has
             <tr>
                 <td>
                     <div class="list-container" style="max-height: 150px; overflow-y: auto; overflow-wrap: break-word; word-break: break-all; padding: 10px;">
-                        """ + "<br>".join(ssh_Ioc) + """
+                        """
+        + "<br>".join(ssh_Ioc)
+        + """
                     </div>
-                    <button class="copy-button" onclick="copyToClipboard('""" + "\n".join(ssh_Ioc) + """')">Copy</button>
+                    <button class="copy-button" onclick="copyToClipboard('"""
+        + "\n".join(ssh_Ioc)
+        + """')">Copy</button>
                 </td>
                 <td>
                     <div class="list-container" style="max-height: 150px; overflow-y: auto; overflow-wrap: break-word; word-break: break-all; padding: 10px;">
-                        """ + "<br>".join(docker_Ioc) + """
+                        """
+        + "<br>".join(docker_Ioc)
+        + """
                     </div>
-                    <button class="copy-button" onclick="copyToClipboard('""" + "\n".join(docker_Ioc) + """')">Copy</button>
+                    <button class="copy-button" onclick="copyToClipboard('"""
+        + "\n".join(docker_Ioc)
+        + """')">Copy</button>
                 </td>
                 <td>
                     <div class="list-container" style="max-height: 150px; overflow-y: auto; overflow-wrap: break-word; word-break: break-all; padding: 10px;">
-                        """ + "<br>".join(smb_Ioc) + """
+                        """
+        + "<br>".join(smb_Ioc)
+        + """
                     </div>
-                    <button class="copy-button" onclick="copyToClipboard('""" + "\n".join(smb_Ioc) + """')">Copy</button>
+                    <button class="copy-button" onclick="copyToClipboard('"""
+        + "\n".join(smb_Ioc)
+        + """')">Copy</button>
                 </td>
             </tr>
             <tr>
@@ -196,9 +294,13 @@ def generate_html(filtered_data, ssh_Ioc, docker_Ioc, smb_Ioc, phis_Ioc, md5_has
             <tr>
                 <td colspan="3">
                     <div class="list-container" style="max-height: 150px; overflow-y: auto; overflow-wrap: break-word; word-break: break-all; padding: 10px;">
-                        """ + "<br>".join(phis_Ioc) + """
+                        """
+        + "<br>".join(phis_Ioc)
+        + """
                     </div>
-                    <button class="copy-button" onclick="copyToClipboard('""" + "\n".join(phis_Ioc) + """')">Copy</button>
+                    <button class="copy-button" onclick="copyToClipboard('"""
+        + "\n".join(phis_Ioc)
+        + """')">Copy</button>
                 </td>
             </tr>
         </table>
@@ -213,32 +315,66 @@ def generate_html(filtered_data, ssh_Ioc, docker_Ioc, smb_Ioc, phis_Ioc, md5_has
             </tr>
             <tr>
                 <td>
-                    <div class="list-container">""" + "<br>".join(md5_hashes) + """</div>
-                    <button class="copy-button" onclick="copyToClipboard('""" + "\n".join(md5_hashes) + """')">Copy</button>
+                    <div class="list-container">"""
+        + "<br>".join(md5_hashes)
+        + """</div>
+                    <button class="copy-button" onclick="copyToClipboard('"""
+        + "\n".join(md5_hashes)
+        + """')">Copy</button>
                 </td>
                 <td>
-                    <div class="list-container">""" + "<br>".join(sha1_hashes) + """</div>
-                    <button class="copy-button" onclick="copyToClipboard('""" + "\n".join(sha1_hashes) + """')">Copy</button>
+                    <div class="list-container">"""
+        + "<br>".join(sha1_hashes)
+        + """</div>
+                    <button class="copy-button" onclick="copyToClipboard('"""
+        + "\n".join(sha1_hashes)
+        + """')">Copy</button>
                 </td>
                 <td>
-                    <div class="list-container">""" + "<br>".join(sha256_hashes) + """</div>
-                    <button class="copy-button" onclick="copyToClipboard('""" + "\n".join(sha256_hashes) + """')">Copy</button>
+                    <div class="list-container">"""
+        + "<br>".join(sha256_hashes)
+        + """</div>
+                    <button class="copy-button" onclick="copyToClipboard('"""
+        + "\n".join(sha256_hashes)
+        + """')">Copy</button>
                 </td>
             </tr>
         </table>
     </body>
     </html>
     """
-    
-    # Write the HTML content to a file
+    )
+
+    # Écrire le contenu HTML dans un fichier
     with open("index.html", "w") as f:
         f.write(html_content)
 
-# Fetch and filter data for each RSS source
-filtered_data = {source: fetch_and_filter_rss(config["url"], config["keywords"]) for source, config in rss_sources.items()}
 
-# Fetch data for AlienVault indicators
-ssh_Ioc, docker_Ioc, smb_Ioc, phis_Ioc, md5_hashes, sha1_hashes, sha256_hashes = fetch_alienvault_data()
+# Récupérer et filtrer les données pour chaque source RSS
+filtered_data = {
+    source: fetch_and_filter_rss(config["url"], config["keywords"])
+    for source, config in rss_sources.items()
+}
 
-# Generate the HTML page
-generate_html(filtered_data, ssh_Ioc, docker_Ioc, smb_Ioc, phis_Ioc, md5_hashes, sha1_hashes, sha256_hashes)
+# Récupérer des données pour les indicateurs AlienVault
+(
+    ssh_Ioc,
+    docker_Ioc,
+    smb_Ioc,
+    phis_Ioc,
+    md5_hashes,
+    sha1_hashes,
+    sha256_hashes,
+) = fetch_alienvault_data()
+
+# Générer la page HTML
+generate_html(
+    filtered_data,
+    ssh_Ioc,
+    docker_Ioc,
+    smb_Ioc,
+    phis_Ioc,
+    md5_hashes,
+    sha1_hashes,
+    sha256_hashes,
+)
