@@ -20,7 +20,7 @@ rss_sources = {
 }
 
 # Fetch API key
-api_key = os.getenv("OTX_API_KEY")
+api_key = os.environ['OTX_API_KEY']
 print(api_key)
 if not api_key:
     raise ValueError("API key not found. Please set the OTX_API_KEY environment variable.")
