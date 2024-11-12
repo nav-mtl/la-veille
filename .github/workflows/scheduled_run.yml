@@ -39,3 +39,4 @@ jobs:
           git push https://x-access-token:${{ secrets.GH_TOKEN }}@github.com/nav-mtl/la-veille.git HEAD:main
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          OTX_API_KEY: ${{ secrets.OTX_API_KEY }}
